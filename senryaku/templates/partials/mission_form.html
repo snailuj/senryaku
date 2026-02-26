@@ -1,0 +1,47 @@
+<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-white">
+                {% if mission %}Edit Mission{% else %}New Mission{% endif %}
+            </h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-white">&times;</button>
+        </div>
+
+        <form hx-post="{% if mission %}/forms/missions/{{ mission.id }}{% else %}/forms/missions{% endif %}"
+              hx-target="#main-content"
+              hx-swap="innerHTML">
+
+            <input type="hidden" name="campaign_id" value="{{ campaign_id }}">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Name</label>
+                    <input type="text" name="name" value="{{ mission.name if mission else '' }}" required
+                           class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Description</label>
+                    <textarea name="description" rows="2"
+                              class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">{{ mission.description if mission else '' }}</textarea>
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Target Date</label>
+                    <input type="date" name="target_date" value="{{ mission.target_date if mission and mission.target_date else '' }}"
+                           class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Sort Order</label>
+                    <input type="number" name="sort_order" value="{{ mission.sort_order if mission else 0 }}" min="0"
+                           class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-400 hover:text-white">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg">
+                    {% if mission %}Save{% else %}Create{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}{{ campaign.name }}{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto" id="main-content">
+    <!-- Breadcrumb -->
+    <div class="mb-4">
+        <a href="/dashboard" class="text-gray-400 hover:text-white text-sm">&larr; Dashboard</a>
+    </div>
+
+    <!-- Campaign header -->
+    <div class="campaign-accent bg-gray-800 rounded-lg p-6 mb-6" style="--campaign-colour: {{ campaign.colour }}">
+        <div class="flex items-center justify-between mb-2">
+            <h2 class="text-2xl font-bold text-white">{{ campaign.name }}</h2>
+            <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full health-{{ health }}"></span>
+                <button hx-get="/partials/campaign-form?id={{ campaign.id }}"
+                        hx-target="#modal-container"
+                        class="text-gray-400 hover:text-white text-sm">Edit</button>
+            </div>
+        </div>
+        <p class="text-gray-400 text-sm">{{ campaign.description }}</p>
+        <div class="flex gap-6 mt-4 text-sm text-gray-400">
+            <span>Priority: #{{ campaign.priority_rank }}</span>
+            <span>Target: {{ campaign.weekly_block_target }} blocks/week</span>
+            {% if campaign.target_date %}
+            <span>Due: {{ campaign.target_date }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Missions -->
+    <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-white">Missions</h3>
+        <button hx-get="/partials/mission-form?campaign_id={{ campaign.id }}"
+                hx-target="#modal-container"
+                class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg">
+            + Mission
+        </button>
+    </div>
+
+    <div id="missions-list" class="space-y-4">
+        {% for mission in missions %}
+        <div class="bg-gray-800 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm px-2 py-0.5 rounded-full
+                        {% if mission.status.value == 'completed' %}bg-green-900 text-green-300
+                        {% elif mission.status.value == 'in_progress' %}bg-blue-900 text-blue-300
+                        {% elif mission.status.value == 'blocked' %}bg-red-900 text-red-300
+                        {% else %}bg-gray-700 text-gray-300{% endif %}">
+                        {{ mission.status.value | replace('_', ' ') | title }}
+                    </span>
+                    <h4 class="font-medium text-white">{{ mission.name }}</h4>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button hx-get="/partials/sortie-form?mission_id={{ mission.id }}"
+                            hx-target="#modal-container"
+                            class="text-gray-400 hover:text-white text-sm">+ Sortie</button>
+                    <button hx-get="/partials/mission-form?id={{ mission.id }}&campaign_id={{ campaign.id }}"
+                            hx-target="#modal-container"
+                            class="text-gray-400 hover:text-white text-sm">Edit</button>
+                </div>
+            </div>
+
+            {% if mission.description %}
+            <p class="text-gray-400 text-sm mb-3">{{ mission.description }}</p>
+            {% endif %}
+
+            <!-- Sorties within this mission -->
+            <div class="space-y-2" id="sorties-{{ mission.id }}">
+                {% for sortie in mission.sorties | sort(attribute='sort_order') %}
+                {% include "partials/sortie_row.html" %}
+                {% endfor %}
+            </div>
+        </div>
+        {% endfor %}
+
+        {% if not missions %}
+        <p class="text-gray-400 text-center py-8">No missions yet. Add a mission to start planning.</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

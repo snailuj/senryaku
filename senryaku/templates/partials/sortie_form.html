@@ -1,0 +1,78 @@
+<div class="modal-overlay" onclick="if(event.target===this)closeModal()">
+    <div class="modal-content">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-bold text-white">
+                {% if sortie %}Edit Sortie{% else %}New Sortie{% endif %}
+            </h3>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-white">&times;</button>
+        </div>
+
+        <form hx-post="{% if sortie %}/forms/sorties/{{ sortie.id }}{% else %}/forms/sorties{% endif %}"
+              hx-target="#main-content"
+              hx-swap="innerHTML">
+
+            <input type="hidden" name="mission_id" value="{{ mission_id }}">
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Title</label>
+                    <input type="text" name="title" value="{{ sortie.title if sortie else '' }}" required
+                           class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-2">Cognitive Load</label>
+                    <div class="flex gap-3">
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="cognitive_load" value="deep" class="hidden peer"
+                                   {% if sortie and sortie.cognitive_load.value == 'deep' %}checked{% elif not sortie %}checked{% endif %}>
+                            <div class="text-center py-2 px-3 rounded-lg border border-gray-700 peer-checked:border-indigo-500 peer-checked:bg-indigo-900/30 transition-colors">
+                                <span class="badge-deep text-xs px-2 py-0.5 rounded-full font-medium">&#129504; Deep</span>
+                            </div>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="cognitive_load" value="medium" class="hidden peer"
+                                   {% if sortie and sortie.cognitive_load.value == 'medium' %}checked{% endif %}>
+                            <div class="text-center py-2 px-3 rounded-lg border border-gray-700 peer-checked:border-amber-500 peer-checked:bg-amber-900/30 transition-colors">
+                                <span class="badge-medium text-xs px-2 py-0.5 rounded-full font-medium">&#9889; Medium</span>
+                            </div>
+                        </label>
+                        <label class="flex-1 cursor-pointer">
+                            <input type="radio" name="cognitive_load" value="light" class="hidden peer"
+                                   {% if sortie and sortie.cognitive_load.value == 'light' %}checked{% endif %}>
+                            <div class="text-center py-2 px-3 rounded-lg border border-gray-700 peer-checked:border-green-500 peer-checked:bg-green-900/30 transition-colors">
+                                <span class="badge-light text-xs px-2 py-0.5 rounded-full font-medium">&#127807; Light</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm text-gray-400 mb-1">Description (optional)</label>
+                    <textarea name="description" rows="2"
+                              class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">{{ sortie.description if sortie and sortie.description else '' }}</textarea>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Estimated Blocks</label>
+                        <input type="number" name="estimated_blocks" value="{{ sortie.estimated_blocks if sortie else 1 }}" min="1" required
+                               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-sm text-gray-400 mb-1">Sort Order</label>
+                        <input type="number" name="sort_order" value="{{ sortie.sort_order if sortie else 0 }}" min="0"
+                               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-end gap-3 mt-6">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-400 hover:text-white">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg">
+                    {% if sortie %}Save{% else %}Create{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

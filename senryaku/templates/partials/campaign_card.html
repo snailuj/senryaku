@@ -1,0 +1,53 @@
+<div class="campaign-accent bg-gray-800 rounded-lg p-4 hover:bg-gray-750 transition-colors cursor-pointer"
+     style="--campaign-colour: {{ campaign.colour }}"
+     hx-get="/campaigns/{{ campaign.campaign_id }}"
+     hx-target="#main-content"
+     hx-push-url="true">
+    <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full health-{{ campaign.health }}"></span>
+            <h3 class="text-lg font-semibold text-white">{{ campaign.name }}</h3>
+        </div>
+        <span class="text-xs text-gray-500">#{{ campaign.priority_rank }}</span>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 text-sm">
+        <!-- Velocity / Target -->
+        <div>
+            <span class="text-gray-400">Blocks</span>
+            <div class="flex items-center gap-2 mt-1">
+                <div class="flex-1 bg-gray-700 rounded-full h-2">
+                    <div class="h-2 rounded-full transition-all"
+                         style="width: {{ (campaign.blocks_this_week / campaign.weekly_block_target * 100) if campaign.weekly_block_target > 0 else 0 }}%; background-color: {{ campaign.colour }}; max-width: 100%"></div>
+                </div>
+                <span class="text-gray-300 text-xs whitespace-nowrap">{{ campaign.blocks_this_week }}/{{ campaign.weekly_block_target }}</span>
+            </div>
+        </div>
+
+        <!-- Staleness -->
+        <div>
+            <span class="text-gray-400">Last active</span>
+            <p class="text-gray-300 mt-1">
+                {% if campaign.staleness_days == 999 %}
+                    <span class="text-red-400">Never</span>
+                {% elif campaign.staleness_days == 0 %}
+                    <span class="text-green-400">Today</span>
+                {% else %}
+                    {{ campaign.staleness_days }}d ago
+                {% endif %}
+            </p>
+        </div>
+
+        <!-- Mission progress -->
+        <div>
+            <span class="text-gray-400">Missions</span>
+            <p class="text-gray-300 mt-1">{{ campaign.missions_completed }}/{{ campaign.missions_total }}</p>
+        </div>
+
+        <!-- Next sortie -->
+        <div>
+            <span class="text-gray-400">Next up</span>
+            <p class="text-gray-300 mt-1 truncate">{{ campaign.next_sortie_title or '—' }}</p>
+        </div>
+    </div>
+</div>

@@ -3,11 +3,33 @@
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-<div class="max-w-6xl mx-auto">
-    <h2 class="text-2xl font-bold text-white mb-6">Campaign Dashboard</h2>
+<div class="max-w-6xl mx-auto" id="main-content">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-white">Campaign Dashboard</h2>
+        <button hx-get="/partials/campaign-form"
+                hx-target="#modal-container"
+                hx-swap="innerHTML"
+                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors">
+            + New Campaign
+        </button>
+    </div>
 
-    <div id="campaign-list" class="space-y-4">
-        <p class="text-gray-400">No campaigns yet. Create one to get started.</p>
+    <div id="campaign-list" class="grid gap-4 md:grid-cols-2">
+        {% if campaigns %}
+            {% for campaign in campaigns %}
+                {% include "partials/campaign_card.html" %}
+            {% endfor %}
+        {% else %}
+            <div class="col-span-2 text-center py-12">
+                <p class="text-gray-400 mb-4">No campaigns yet. Create your first campaign to get started.</p>
+                <button hx-get="/partials/campaign-form"
+                        hx-target="#modal-container"
+                        hx-swap="innerHTML"
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white text-sm rounded-lg">
+                    Create Campaign
+                </button>
+            </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

@@ -1,0 +1,31 @@
+[project]
+name = "senryaku"
+version = "0.1.0"
+description = "Personal operations server — strategic work allocation across campaigns"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "sqlmodel>=0.0.22",
+    "alembic>=1.14.0",
+    "jinja2>=3.1.0",
+    "python-dotenv>=1.0.0",
+    "apscheduler>=3.10.0",
+    "httpx>=0.27.0",
+    "pydantic-settings>=2.0.0",
+    "python-multipart>=0.0.9",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
+    "httpx>=0.27.0",
+]
+
+[tool.setuptools.packages.find]
+include = ["senryaku*"]
+
+[build-system]
+requires = ["setuptools>=75.0"]
+build-backend = "setuptools.build_meta"

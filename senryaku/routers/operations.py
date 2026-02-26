@@ -1,11 +1,15 @@
 """Operations API router — daily check-in and operational endpoints."""
 
+from datetime import date as date_type
+
 from fastapi import APIRouter, Depends
 from sqlmodel import Session, select
+from starlette.responses import PlainTextResponse
 
 from senryaku.database import get_session
-from senryaku.models import DailyCheckIn
-from senryaku.schemas import DailyCheckInCreate, DailyCheckInRead
+from senryaku.models import DailyCheckIn, EnergyLevel
+from senryaku.schemas import BriefingResponse, BriefingSortie, DailyCheckInCreate, DailyCheckInRead
+from senryaku.services.briefing import generate_briefing
 
 router = APIRouter()
 
@@ -36,3 +40,58 @@ def create_checkin(
     session.commit()
     session.refresh(db_checkin)
     return db_checkin
+
+
+@router.get("/briefing/today")
+def get_briefing(
+    energy: str | None = None,
+    format: str | None = None,
+    session: Session = Depends(get_session),
+):
+    """Generate today's briefing. Uses today's check-in or defaults."""
+    # Get today's check-in
+    checkin = session.exec(
+        select(DailyCheckIn).where(DailyCheckIn.date == date_type.today())
+    ).first()
+
+    # Use provided energy or check-in energy or default
+    if energy:
+        energy_level = EnergyLevel(energy)
+    elif checkin:
+        energy_level = checkin.energy_level
+    else:
+        energy_level = EnergyLevel.green
+
+    available_blocks = checkin.available_blocks if checkin else 4
+
+    sorties = generate_briefing(session, energy_level, available_blocks)
+
+    if format == "markdown":
+        # Return markdown text
+        lines = [f"# Daily Briefing \u2014 {date_type.today()}", ""]
+        lines.append(f"Energy: {energy_level.value} | Blocks: {available_blocks}")
+        lines.append("")
+        for i, s in enumerate(sorties, 1):
+            load_emoji = {"deep": "\U0001f9e0", "medium": "\u26a1", "light": "\U0001f33f"}.get(s.cognitive_load.value, "")
+            lines.append(f"{i}. {load_emoji} **{s.title}** ({s.campaign_name} \u2192 {s.mission_name})")
+        return PlainTextResponse("\n".join(lines))
+
+    return BriefingResponse(
+        date=date_type.today(),
+        energy_level=energy_level,
+        available_blocks=available_blocks,
+        sorties=sorties,
+    )
+
+
+@router.get("/briefing/route")
+def route_sortie(
+    energy: str = "green",
+    session: Session = Depends(get_session),
+):
+    """Return the single best sortie for current energy."""
+    energy_level = EnergyLevel(energy)
+    sorties = generate_briefing(session, energy_level, 1)  # Just need 1
+    if sorties:
+        return sorties[0]
+    return None

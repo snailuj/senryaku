@@ -84,6 +84,28 @@ def campaign_detail(request: Request, campaign_id: str, session: Session = Depen
     })
 
 
+@router.get("/briefing")
+def briefing_page(request: Request, session: Session = Depends(get_session)):
+    """Daily briefing page."""
+    from senryaku.services.briefing import generate_briefing
+
+    checkin = session.exec(
+        select(DailyCheckIn).where(DailyCheckIn.date == date.today())
+    ).first()
+
+    energy = checkin.energy_level if checkin else EnergyLevel.green
+    available = checkin.available_blocks if checkin else 4
+
+    sorties = generate_briefing(session, energy, available)
+
+    return templates.TemplateResponse("briefing.html", {
+        "request": request,
+        "current_date": date.today().strftime("%A, %B %d"),
+        "checkin": checkin,
+        "sorties": sorties,
+    })
+
+
 @router.get("/checkin")
 def checkin_page(request: Request, session: Session = Depends(get_session)):
     """Check-in page."""
@@ -97,6 +119,30 @@ def checkin_page(request: Request, session: Session = Depends(get_session)):
 # ---------------------------------------------------------------------------
 # Partial routes (return HTMX fragments for modals)
 # ---------------------------------------------------------------------------
+
+
+@router.get("/partials/route-modal")
+def route_modal(request: Request):
+    """Energy selector modal."""
+    return templates.TemplateResponse("partials/route_result.html", {
+        "request": request,
+        "show_result": False,
+    })
+
+
+@router.get("/partials/route-result")
+def route_result(request: Request, energy: str, session: Session = Depends(get_session)):
+    """Route result after energy selection."""
+    from senryaku.services.briefing import generate_briefing
+
+    energy_level = EnergyLevel(energy)
+    sorties = generate_briefing(session, energy_level, 1)
+
+    return templates.TemplateResponse("partials/route_result.html", {
+        "request": request,
+        "show_result": True,
+        "sortie": sorties[0] if sorties else None,
+    })
 
 
 @router.get("/partials/campaign-form")

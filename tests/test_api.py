@@ -661,3 +661,132 @@ class TestDailyCheckIn:
         assert resp2.status_code == 201
         # Different IDs = separate records
         assert resp1.json()["id"] != resp2.json()["id"]
+
+
+# ---------------------------------------------------------------------------
+# Briefing API tests
+# ---------------------------------------------------------------------------
+
+
+class TestBriefingAPI:
+    def test_get_briefing_today_returns_200(self, client):
+        """GET /api/v1/briefing/today returns a briefing (empty sorties is OK)."""
+        response = client.get("/api/v1/briefing/today", headers=API_KEY_HEADER)
+        assert response.status_code == 200
+        data = response.json()
+        assert "date" in data
+        assert "energy_level" in data
+        assert "available_blocks" in data
+        assert "sorties" in data
+        assert isinstance(data["sorties"], list)
+
+    def test_get_briefing_today_with_energy_param(self, client):
+        """GET /api/v1/briefing/today?energy=green uses provided energy."""
+        response = client.get(
+            "/api/v1/briefing/today",
+            params={"energy": "green"},
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["energy_level"] == "green"
+
+    def test_get_briefing_today_with_yellow_energy(self, client):
+        """GET /api/v1/briefing/today?energy=yellow uses yellow energy."""
+        response = client.get(
+            "/api/v1/briefing/today",
+            params={"energy": "yellow"},
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["energy_level"] == "yellow"
+
+    def test_get_briefing_today_markdown_format(self, client):
+        """GET /api/v1/briefing/today?format=markdown returns plain text."""
+        response = client.get(
+            "/api/v1/briefing/today",
+            params={"format": "markdown"},
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith("text/plain")
+        assert "Daily Briefing" in response.text
+
+    def test_get_briefing_today_uses_checkin_energy(self, client):
+        """Briefing uses today's check-in energy when no param provided."""
+        from datetime import date
+
+        checkin_data = {
+            "date": date.today().isoformat(),
+            "energy_level": "red",
+            "available_blocks": 2,
+        }
+        client.post("/api/v1/checkin", json=checkin_data, headers=API_KEY_HEADER)
+
+        response = client.get("/api/v1/briefing/today", headers=API_KEY_HEADER)
+        assert response.status_code == 200
+        data = response.json()
+        assert data["energy_level"] == "red"
+        assert data["available_blocks"] == 2
+
+    def test_get_briefing_today_with_sorties(self, client):
+        """Briefing returns sorties when campaigns/missions/sorties exist."""
+        # Create a campaign, mission, and sortie
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+        create_sortie(client, mission["id"], title="Write tests", cognitive_load="light")
+
+        response = client.get(
+            "/api/v1/briefing/today",
+            params={"energy": "green"},
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data["sorties"]) >= 1
+        assert data["sorties"][0]["title"] == "Write tests"
+
+
+class TestBriefingRouteAPI:
+    def test_route_sortie_returns_null_when_empty(self, client):
+        """GET /api/v1/briefing/route?energy=green returns null when no sorties."""
+        response = client.get(
+            "/api/v1/briefing/route",
+            params={"energy": "green"},
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        assert response.json() is None
+
+    def test_route_sortie_returns_single_sortie(self, client):
+        """GET /api/v1/briefing/route returns the best sortie."""
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+        create_sortie(client, mission["id"], title="Top Priority", cognitive_load="medium")
+
+        response = client.get(
+            "/api/v1/briefing/route",
+            params={"energy": "green"},
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data is not None
+        assert data["title"] == "Top Priority"
+
+    def test_route_sortie_respects_energy_filter(self, client):
+        """Route with red energy should only return light-load sorties."""
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+        # Create only a deep-load sortie
+        create_sortie(client, mission["id"], title="Deep Work", cognitive_load="deep")
+
+        response = client.get(
+            "/api/v1/briefing/route",
+            params={"energy": "red"},
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        # Red energy only allows light load, so deep sortie should not be returned
+        assert response.json() is None

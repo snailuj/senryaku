@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Senryaku{% endblock %} — 戦略</title>
+    <!-- Tailwind CSS via CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- HTMX -->
+    <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+    <link rel="stylesheet" href="/static/app.css">
+</head>
+<body class="bg-gray-950 text-gray-100 min-h-screen flex" hx-boost="true">
+    <!-- Mobile hamburger overlay -->
+    <div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="toggleSidebar()"></div>
+
+    <!-- Sidebar -->
+    <aside id="sidebar" class="fixed lg:static inset-y-0 left-0 z-50 w-64 bg-gray-900 border-r border-gray-800 transform -translate-x-full lg:translate-x-0 transition-transform duration-200 flex flex-col">
+        <div class="p-4 border-b border-gray-800">
+            <h1 class="text-xl font-bold text-white">戦略 <span class="text-sm font-normal text-gray-400">Senryaku</span></h1>
+        </div>
+
+        <nav class="flex-1 p-4 space-y-1">
+            <a href="/dashboard" class="flex items-center px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+                <span class="mr-3">📊</span> Dashboard
+            </a>
+            <a href="/briefing" class="flex items-center px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+                <span class="mr-3">🎯</span> Briefing
+            </a>
+            <a href="/drift" class="flex items-center px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+                <span class="mr-3">📐</span> Drift Report
+            </a>
+            <a href="/review" class="flex items-center px-3 py-2 rounded-lg text-gray-300 hover:bg-gray-800 hover:text-white transition-colors">
+                <span class="mr-3">📋</span> Weekly Review
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-gray-800">
+            <a href="/settings" class="flex items-center px-3 py-2 rounded-lg text-gray-400 hover:bg-gray-800 hover:text-white transition-colors text-sm">
+                Settings
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="flex-1 flex flex-col min-h-screen">
+        <!-- Top bar -->
+        <header class="sticky top-0 z-30 bg-gray-900/80 backdrop-blur border-b border-gray-800 px-4 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <!-- Hamburger (mobile) -->
+                <button onclick="toggleSidebar()" class="lg:hidden p-1 rounded text-gray-400 hover:text-white">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                <span class="text-sm text-gray-400">{{ current_date }}</span>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- What should I do? button -->
+                <button
+                    hx-get="/partials/route-modal"
+                    hx-target="#modal-container"
+                    hx-swap="innerHTML"
+                    class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-medium rounded-lg transition-colors"
+                >
+                    What should I do?
+                </button>
+            </div>
+        </header>
+
+        <!-- Page content -->
+        <main class="flex-1 p-4 lg:p-6">
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Modal container for HTMX -->
+    <div id="modal-container"></div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

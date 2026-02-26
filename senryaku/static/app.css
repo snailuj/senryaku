@@ -1,0 +1,44 @@
+/* Campaign colour accent - applied via inline style */
+.campaign-accent {
+    border-left: 4px solid var(--campaign-colour, #6366f1);
+}
+
+/* Cognitive load badges */
+.badge-deep { background-color: #4338ca; color: #e0e7ff; }
+.badge-medium { background-color: #d97706; color: #fef3c7; }
+.badge-light { background-color: #059669; color: #d1fae5; }
+
+/* Energy indicators */
+.energy-green { color: #22c55e; }
+.energy-yellow { color: #eab308; }
+.energy-red { color: #ef4444; }
+
+/* Health dots */
+.health-green { background-color: #22c55e; }
+.health-yellow { background-color: #eab308; }
+.health-red { background-color: #ef4444; }
+
+/* HTMX transitions */
+.htmx-swapping { opacity: 0; transition: opacity 200ms ease-out; }
+.htmx-settling { opacity: 1; transition: opacity 200ms ease-in; }
+
+/* Modal overlay */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 60;
+}
+
+.modal-content {
+    background: #1f2937;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    max-width: 32rem;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}

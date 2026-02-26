@@ -57,7 +57,9 @@ from senryaku.routers.campaigns import router as campaigns_router  # noqa: E402
 from senryaku.routers.missions import router as missions_router  # noqa: E402
 from senryaku.routers.sorties import router as sorties_router  # noqa: E402
 from senryaku.routers.operations import router as operations_router  # noqa: E402
+from senryaku.routers.dashboard import router as dashboard_router  # noqa: E402
 
+app.include_router(dashboard_router)  # No prefix — pages at / and /dashboard
 app.include_router(campaigns_router, prefix="/api/v1")
 app.include_router(missions_router, prefix="/api/v1")
 app.include_router(sorties_router, prefix="/api/v1")

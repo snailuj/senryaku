@@ -146,6 +146,15 @@ class AARCreate(BaseModel):
     notes: Optional[str] = None
 
 
+class SortieCompleteRequest(BaseModel):
+    """Body for PUT /sorties/{id}/complete — AAR data without sortie_id."""
+    energy_before: EnergyLevel
+    energy_after: EnergyLevel
+    outcome: AAROutcome
+    actual_blocks: int = 1
+    notes: Optional[str] = None
+
+
 class AARRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

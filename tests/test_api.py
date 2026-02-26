@@ -378,3 +378,286 @@ class TestAPIKeyAuth:
     def test_request_with_correct_api_key_succeeds(self, client):
         response = client.get("/api/v1/campaigns", headers=API_KEY_HEADER)
         assert response.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# Sortie helpers & tests
+# ---------------------------------------------------------------------------
+
+
+def create_sortie(client, mission_id, **overrides):
+    """Helper to create a sortie via the API."""
+    data = {
+        "mission_id": str(mission_id),
+        "title": "Test Sortie",
+        "cognitive_load": "medium",
+        "estimated_blocks": 1,
+        "sort_order": 0,
+    }
+    data.update(overrides)
+    return client.post("/api/v1/sorties", json=data, headers=API_KEY_HEADER)
+
+
+class TestCreateSortie:
+    def test_create_sortie_returns_201(self, client):
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+        response = create_sortie(client, mission["id"])
+        assert response.status_code == 201
+        data = response.json()
+        assert data["status"] == "queued"
+        assert data["title"] == "Test Sortie"
+        assert data["mission_id"] == mission["id"]
+        assert "id" in data
+        assert "created_at" in data
+
+    def test_create_sortie_with_nonexistent_mission_returns_404(self, client):
+        fake_id = "00000000-0000-0000-0000-000000000000"
+        response = create_sortie(client, fake_id)
+        assert response.status_code == 404
+
+
+class TestListSorties:
+    def test_list_sorties_for_mission_ordered_by_sort_order(self, client):
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+        create_sortie(client, mission["id"], title="Sortie B", sort_order=2)
+        create_sortie(client, mission["id"], title="Sortie A", sort_order=0)
+        create_sortie(client, mission["id"], title="Sortie C", sort_order=1)
+
+        response = client.get(
+            f"/api/v1/missions/{mission['id']}/sorties",
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 3
+        assert data[0]["title"] == "Sortie A"
+        assert data[1]["title"] == "Sortie C"
+        assert data[2]["title"] == "Sortie B"
+
+    def test_list_queued_sorties_across_campaigns(self, client):
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+        create_sortie(client, mission["id"], title="Queued One")
+        create_sortie(client, mission["id"], title="Queued Two")
+
+        response = client.get("/api/v1/sorties/queued", headers=API_KEY_HEADER)
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 2
+        titles = {s["title"] for s in data}
+        assert titles == {"Queued One", "Queued Two"}
+
+
+class TestUpdateSortie:
+    def test_update_sortie_title_and_description(self, client):
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+        sortie = create_sortie(client, mission["id"]).json()
+
+        response = client.put(
+            f"/api/v1/sorties/{sortie['id']}",
+            json={"title": "Updated Title", "description": "New desc"},
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["title"] == "Updated Title"
+        assert data["description"] == "New desc"
+
+
+class TestStartSortie:
+    def test_start_sortie_sets_active_and_started_at(self, client):
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+        sortie = create_sortie(client, mission["id"]).json()
+        assert sortie["status"] == "queued"
+        assert sortie["started_at"] is None
+
+        response = client.put(
+            f"/api/v1/sorties/{sortie['id']}/start",
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "active"
+        assert data["started_at"] is not None
+
+    def test_start_already_active_sortie_returns_error(self, client):
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+        sortie = create_sortie(client, mission["id"]).json()
+
+        # Start it once
+        client.put(
+            f"/api/v1/sorties/{sortie['id']}/start",
+            headers=API_KEY_HEADER,
+        )
+
+        # Try to start again
+        response = client.put(
+            f"/api/v1/sorties/{sortie['id']}/start",
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 400
+
+
+class TestCompleteSortie:
+    def test_complete_sortie_with_aar_data(self, client):
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+        sortie = create_sortie(client, mission["id"]).json()
+
+        # Start the sortie first
+        client.put(
+            f"/api/v1/sorties/{sortie['id']}/start",
+            headers=API_KEY_HEADER,
+        )
+
+        # Complete with AAR data
+        aar_data = {
+            "outcome": "completed",
+            "energy_before": "green",
+            "energy_after": "yellow",
+            "actual_blocks": 2,
+            "notes": "Went well",
+        }
+        response = client.put(
+            f"/api/v1/sorties/{sortie['id']}/complete",
+            json=aar_data,
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "completed"
+        assert data["completed_at"] is not None
+
+    def test_complete_sortie_creates_aar_record(self, client, session):
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+        sortie = create_sortie(client, mission["id"]).json()
+
+        # Start, then complete
+        client.put(
+            f"/api/v1/sorties/{sortie['id']}/start",
+            headers=API_KEY_HEADER,
+        )
+        aar_data = {
+            "outcome": "partial",
+            "energy_before": "green",
+            "energy_after": "red",
+            "actual_blocks": 1,
+            "notes": "Hit a blocker",
+        }
+        client.put(
+            f"/api/v1/sorties/{sortie['id']}/complete",
+            json=aar_data,
+            headers=API_KEY_HEADER,
+        )
+
+        # Verify AAR record was created in the database
+        from senryaku.models import AAR
+        from sqlmodel import select
+        from uuid import UUID
+
+        aar = session.exec(
+            select(AAR).where(AAR.sortie_id == UUID(sortie["id"]))
+        ).first()
+        assert aar is not None
+        assert aar.outcome.value == "partial"
+        assert aar.energy_before.value == "green"
+        assert aar.energy_after.value == "red"
+        assert aar.actual_blocks == 1
+        assert aar.notes == "Hit a blocker"
+
+
+class TestDeleteSortie:
+    def test_delete_sortie_soft_deletes_to_abandoned(self, client):
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+        sortie = create_sortie(client, mission["id"]).json()
+
+        response = client.delete(
+            f"/api/v1/sorties/{sortie['id']}",
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "abandoned"
+
+
+# ---------------------------------------------------------------------------
+# Check-in tests
+# ---------------------------------------------------------------------------
+
+
+class TestDailyCheckIn:
+    def test_create_checkin_returns_201(self, client):
+        checkin_data = {
+            "date": "2026-02-26",
+            "energy_level": "green",
+            "available_blocks": 4,
+            "focus_note": "Feeling sharp today",
+        }
+        response = client.post(
+            "/api/v1/checkin", json=checkin_data, headers=API_KEY_HEADER
+        )
+        assert response.status_code == 201
+        data = response.json()
+        assert data["date"] == "2026-02-26"
+        assert data["energy_level"] == "green"
+        assert data["available_blocks"] == 4
+        assert data["focus_note"] == "Feeling sharp today"
+        assert "id" in data
+        assert "created_at" in data
+
+    def test_checkin_same_date_upserts(self, client):
+        checkin_data = {
+            "date": "2026-02-26",
+            "energy_level": "green",
+            "available_blocks": 4,
+        }
+        resp1 = client.post(
+            "/api/v1/checkin", json=checkin_data, headers=API_KEY_HEADER
+        )
+        assert resp1.status_code == 201
+        id1 = resp1.json()["id"]
+
+        # Second check-in for same date should upsert (update, not create new)
+        checkin_data2 = {
+            "date": "2026-02-26",
+            "energy_level": "yellow",
+            "available_blocks": 2,
+        }
+        resp2 = client.post(
+            "/api/v1/checkin", json=checkin_data2, headers=API_KEY_HEADER
+        )
+        assert resp2.status_code == 201
+        data2 = resp2.json()
+        # Same record, updated
+        assert data2["id"] == id1
+        assert data2["energy_level"] == "yellow"
+        assert data2["available_blocks"] == 2
+
+    def test_checkin_different_dates_create_separate_records(self, client):
+        checkin1 = {
+            "date": "2026-02-25",
+            "energy_level": "green",
+            "available_blocks": 4,
+        }
+        checkin2 = {
+            "date": "2026-02-26",
+            "energy_level": "red",
+            "available_blocks": 1,
+        }
+        resp1 = client.post(
+            "/api/v1/checkin", json=checkin1, headers=API_KEY_HEADER
+        )
+        resp2 = client.post(
+            "/api/v1/checkin", json=checkin2, headers=API_KEY_HEADER
+        )
+        assert resp1.status_code == 201
+        assert resp2.status_code == 201
+        # Different IDs = separate records
+        assert resp1.json()["id"] != resp2.json()["id"]

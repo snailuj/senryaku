@@ -236,3 +236,29 @@ class BriefingResponse(BaseModel):
     energy_level: EnergyLevel
     available_blocks: int
     sorties: List[BriefingSortie]
+
+
+# ---------------------------------------------------------------------------
+# Drift Detection
+# ---------------------------------------------------------------------------
+
+
+class CampaignDrift(BaseModel):
+    campaign_id: UUID
+    name: str
+    colour: str
+    priority_rank: int
+    weekly_block_target: int
+    blocks_this_week: int
+    expected_share: float  # 0.0 to 1.0
+    actual_share: float    # 0.0 to 1.0
+    drift: float           # actual - expected
+    is_misaligned: bool    # abs(drift) > 0.15
+    trend: str             # "improving", "worsening", "stable", "new"
+
+
+class DriftReport(BaseModel):
+    date: date
+    total_blocks_this_week: int
+    campaigns: List[CampaignDrift]
+    misalignment_statements: List[str]

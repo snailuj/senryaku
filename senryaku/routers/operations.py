@@ -95,3 +95,16 @@ def route_sortie(
     if sorties:
         return sorties[0]
     return None
+
+
+@router.get("/review/weekly")
+def get_weekly_review(
+    format: str | None = None,
+    session: Session = Depends(get_session),
+):
+    """Generate the weekly review. Returns JSON or markdown."""
+    from senryaku.services.review import generate_weekly_review, generate_weekly_review_markdown
+
+    if format == "markdown":
+        return PlainTextResponse(generate_weekly_review_markdown(session))
+    return generate_weekly_review(session)

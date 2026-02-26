@@ -121,6 +121,19 @@ def checkin_page(request: Request, session: Session = Depends(get_session)):
     })
 
 
+@router.get("/review")
+def review_page(request: Request, session: Session = Depends(get_session)):
+    """Weekly review page."""
+    from senryaku.services.review import generate_weekly_review
+
+    data = generate_weekly_review(session)
+    return templates.TemplateResponse("review.html", {
+        "request": request,
+        "current_date": date.today().strftime("%A, %B %d"),
+        **data,
+    })
+
+
 @router.get("/sorties/{sortie_id}/focus")
 def sortie_focus(request: Request, sortie_id: str, session: Session = Depends(get_session)):
     """Sortie focus view with 90-minute timer."""

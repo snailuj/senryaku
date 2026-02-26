@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+
+{% block title %}Weekly Review{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto" id="main-content">
+    <div class="flex items-center justify-between mb-6">
+        <h2 class="text-2xl font-bold text-white">振り返り Weekly Review</h2>
+        <a href="/api/v1/review/weekly?format=markdown" target="_blank"
+           class="text-sm text-gray-400 hover:text-white">Export Markdown ↗</a>
+    </div>
+
+    <!-- Scoreboard -->
+    <section class="mb-8">
+        <h3 class="text-lg font-semibold text-white mb-4">Scoreboard</h3>
+        <div class="space-y-3">
+            {% for s in scoreboard %}
+            <div class="bg-gray-800 rounded-lg p-4">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-white font-medium">{{ s.name }}</span>
+                    <span class="text-sm text-gray-400">{{ s.blocks_completed }}/{{ s.weekly_target }} blocks ({{ s.completion_pct }}%)</span>
+                </div>
+                <div class="bg-gray-700 rounded-full h-2">
+                    <div class="h-2 rounded-full transition-all"
+                         style="width: {{ s.completion_pct }}%; background-color: {{ s.colour }}; max-width: 100%"></div>
+                </div>
+            </div>
+            {% endfor %}
+            {% if not scoreboard %}
+            <p class="text-gray-400 text-sm">No active campaigns.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Missions Moved -->
+    <section class="mb-8">
+        <h3 class="text-lg font-semibold text-white mb-4">Missions Moved</h3>
+        {% if missions_moved %}
+        <div class="space-y-2">
+            {% for m in missions_moved %}
+            <div class="bg-gray-800 rounded-lg p-3 text-sm">
+                <span class="text-gray-400">{{ m.campaign_name }} →</span>
+                <span class="text-white font-medium">{{ m.name }}</span>
+                <span class="text-gray-500">{{ m.old_status }} → {{ m.new_status }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-400 text-sm">No mission status changes this week.</p>
+        {% endif %}
+    </section>
+
+    <!-- Drift Summary -->
+    <section class="mb-8">
+        <h3 class="text-lg font-semibold text-white mb-4">Drift Summary</h3>
+        {% set misaligned = [] %}
+        {% for d in drift_summary %}
+            {% if d.is_misaligned %}
+                {% if misaligned.append(d) %}{% endif %}
+            {% endif %}
+        {% endfor %}
+        {% if misaligned %}
+        <div class="space-y-2">
+            {% for d in drift_summary %}
+            {% if d.is_misaligned %}
+            <div class="bg-yellow-900/20 border border-yellow-900/50 rounded-lg p-3 text-sm text-yellow-300">
+                <strong>{{ d.name }}</strong>:
+                {% if d.drift > 0 %}over{% else %}under{% endif %}-allocated
+                by {{ (d.drift|abs * 100)|round|int }}%
+                <span class="text-yellow-500 ml-2">(expected {{ (d.expected_share * 100)|round|int }}%, actual {{ (d.actual_share * 100)|round|int }}%)</span>
+            </div>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-400 text-sm">All campaigns within alignment thresholds.</p>
+        {% endif %}
+    </section>
+
+    <!-- Staleness Alerts -->
+    <section class="mb-8">
+        <h3 class="text-lg font-semibold text-white mb-4">Staleness Alerts</h3>
+        {% if staleness_alerts %}
+        <div class="space-y-2">
+            {% for a in staleness_alerts %}
+            <div class="bg-red-900/20 border border-red-900/50 rounded-lg p-3 text-sm text-red-300">
+                ⚠️ <strong>{{ a.name }}</strong> untouched for {{ a.days }} days
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-gray-400 text-sm">All campaigns active this week.</p>
+        {% endif %}
+    </section>
+
+    <!-- Energy Patterns -->
+    <section class="mb-8">
+        <h3 class="text-lg font-semibold text-white mb-4">Energy Patterns</h3>
+        <div class="bg-gray-800 rounded-lg p-4">
+            {% if energy_patterns.checkins %}
+            <div class="flex items-center gap-1 mb-2">
+                {% for day in energy_patterns.daily %}
+                <div class="flex-1 h-8 rounded flex items-center justify-center text-xs
+                    {% if day.level == 'green' %}bg-green-900/50 text-green-300
+                    {% elif day.level == 'yellow' %}bg-yellow-900/50 text-yellow-300
+                    {% else %}bg-red-900/50 text-red-300{% endif %}">
+                    {{ day.short_day }}
+                </div>
+                {% endfor %}
+            </div>
+            <p class="text-sm text-gray-400">Average energy: <strong class="
+                {% if energy_patterns.average_label == 'green' %}text-green-300
+                {% elif energy_patterns.average_label == 'yellow' %}text-yellow-300
+                {% else %}text-red-300{% endif %}">{{ energy_patterns.average_label }}</strong>
+                ({{ energy_patterns.average }})</p>
+            {% else %}
+            <p class="text-sm text-gray-400">No check-ins recorded this week.</p>
+            {% endif %}
+        </div>
+    </section>
+
+    <!-- Re-rank Prompt -->
+    <section class="mb-8">
+        <h3 class="text-lg font-semibold text-white mb-4">Re-rank Your Campaigns</h3>
+        <p class="text-sm text-gray-400 mb-3">Current priority order:</p>
+        <div class="space-y-2">
+            {% for r in current_rankings %}
+            <div class="bg-gray-800 rounded-lg p-3 flex items-center gap-3">
+                <span class="text-gray-500 font-bold">{{ r.rank }}</span>
+                <span class="text-white">{{ r.name }}</span>
+            </div>
+            {% endfor %}
+        </div>
+        <a href="/dashboard" class="inline-block mt-3 text-sm text-indigo-400 hover:text-indigo-300">Go to dashboard to re-rank →</a>
+    </section>
+
+    <!-- Next Week Preview -->
+    <section class="mb-8">
+        <h3 class="text-lg font-semibold text-white mb-4">Next Week Preview</h3>
+        {% if next_week_preview.upcoming_targets %}
+        <div class="mb-4">
+            <h4 class="text-sm font-medium text-gray-300 mb-2">Upcoming Deadlines</h4>
+            <div class="space-y-2">
+                {% for t in next_week_preview.upcoming_targets %}
+                <div class="bg-gray-800 rounded-lg p-3 text-sm flex items-center justify-between">
+                    <span class="text-white">{{ t.name }}</span>
+                    <span class="text-gray-400">{{ t.target_date }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% if next_week_preview.blocked_sorties %}
+        <div class="mb-4">
+            <h4 class="text-sm font-medium text-gray-300 mb-2">Blocked Sorties</h4>
+            <div class="space-y-2">
+                {% for b in next_week_preview.blocked_sorties %}
+                <div class="bg-orange-900/20 border border-orange-900/50 rounded-lg p-3 text-sm text-orange-300">
+                    {{ b.campaign_name }} > {{ b.mission_name }} > {{ b.title }}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% if not next_week_preview.upcoming_targets and not next_week_preview.blocked_sorties %}
+        <p class="text-gray-400 text-sm">No upcoming deadlines or blocked work.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

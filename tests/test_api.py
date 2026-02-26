@@ -246,6 +246,124 @@ class TestRerankCampaigns:
         assert len(data) == 2
 
 
+# ---------------------------------------------------------------------------
+# Mission helpers & tests
+# ---------------------------------------------------------------------------
+
+
+def create_mission(client, campaign_id, **overrides):
+    """Helper to create a mission via the API."""
+    data = {
+        "campaign_id": str(campaign_id),
+        "name": "Test Mission",
+        "description": "Test description",
+        "sort_order": 0,
+    }
+    data.update(overrides)
+    return client.post("/api/v1/missions", json=data, headers=API_KEY_HEADER)
+
+
+class TestCreateMission:
+    def test_create_mission_returns_201(self, client):
+        camp = create_campaign(client).json()
+        response = create_mission(client, camp["id"])
+        assert response.status_code == 201
+
+    def test_create_mission_returns_correct_data(self, client):
+        camp = create_campaign(client).json()
+        response = create_mission(
+            client,
+            camp["id"],
+            name="Recon Alpha",
+            description="Scout the perimeter",
+        )
+        data = response.json()
+        assert data["name"] == "Recon Alpha"
+        assert data["description"] == "Scout the perimeter"
+        assert data["campaign_id"] == camp["id"]
+        assert data["status"] == "not_started"
+        assert "id" in data
+        assert "created_at" in data
+
+    def test_create_mission_with_nonexistent_campaign_returns_404(self, client):
+        fake_id = "00000000-0000-0000-0000-000000000000"
+        response = create_mission(client, fake_id)
+        assert response.status_code == 404
+
+
+class TestListMissions:
+    def test_list_missions_for_campaign(self, client):
+        camp = create_campaign(client).json()
+        create_mission(client, camp["id"], name="Mission A", sort_order=1)
+        create_mission(client, camp["id"], name="Mission B", sort_order=0)
+
+        response = client.get(
+            f"/api/v1/campaigns/{camp['id']}/missions",
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert len(data) == 2
+        # Should be ordered by sort_order
+        assert data[0]["name"] == "Mission B"
+        assert data[1]["name"] == "Mission A"
+
+    def test_list_missions_empty_for_campaign_with_no_missions(self, client):
+        camp = create_campaign(client).json()
+        response = client.get(
+            f"/api/v1/campaigns/{camp['id']}/missions",
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        assert response.json() == []
+
+
+class TestUpdateMission:
+    def test_update_mission_name_and_description(self, client):
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+
+        response = client.put(
+            f"/api/v1/missions/{mission['id']}",
+            json={"name": "Updated Name", "description": "Updated desc"},
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["name"] == "Updated Name"
+        assert data["description"] == "Updated desc"
+
+    def test_update_mission_status_to_completed_sets_completed_at(self, client):
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+        assert mission["completed_at"] is None
+
+        response = client.put(
+            f"/api/v1/missions/{mission['id']}",
+            json={"status": "completed"},
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "completed"
+        assert data["completed_at"] is not None
+
+
+class TestDeleteMission:
+    def test_delete_mission_soft_deletes(self, client):
+        camp = create_campaign(client).json()
+        mission = create_mission(client, camp["id"]).json()
+
+        response = client.delete(
+            f"/api/v1/missions/{mission['id']}",
+            headers=API_KEY_HEADER,
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["status"] == "completed"
+        assert data["completed_at"] is not None
+
+
 class TestAPIKeyAuth:
     def test_request_without_api_key_returns_401(self, client):
         response = client.get("/api/v1/campaigns")

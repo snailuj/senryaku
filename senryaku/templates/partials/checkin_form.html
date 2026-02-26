@@ -1,0 +1,71 @@
+<div class="max-w-md mx-auto">
+    <h3 class="text-xl font-bold text-white mb-6 text-center">朝礼 Morning Check-in</h3>
+
+    <form hx-post="/forms/checkin" hx-target="#main-content" hx-swap="innerHTML">
+        <input type="hidden" name="date" value="{{ today }}">
+
+        <!-- Energy Level - 3 large buttons -->
+        <div class="mb-6">
+            <label class="block text-sm text-gray-400 mb-3">How's your energy?</label>
+            <div class="grid grid-cols-3 gap-3">
+                <label class="cursor-pointer">
+                    <input type="radio" name="energy_level" value="green" class="sr-only peer" checked>
+                    <div class="peer-checked:ring-2 peer-checked:ring-green-500 peer-checked:bg-green-900/50 bg-gray-800 rounded-xl p-4 text-center transition-all hover:bg-gray-750">
+                        <div class="text-3xl mb-1">🟢</div>
+                        <div class="text-sm text-gray-300">Good</div>
+                        <div class="text-xs text-gray-500">Deep work OK</div>
+                    </div>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="energy_level" value="yellow" class="sr-only peer">
+                    <div class="peer-checked:ring-2 peer-checked:ring-yellow-500 peer-checked:bg-yellow-900/50 bg-gray-800 rounded-xl p-4 text-center transition-all hover:bg-gray-750">
+                        <div class="text-3xl mb-1">🟡</div>
+                        <div class="text-sm text-gray-300">Medium</div>
+                        <div class="text-xs text-gray-500">No deep work</div>
+                    </div>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="energy_level" value="red" class="sr-only peer">
+                    <div class="peer-checked:ring-2 peer-checked:ring-red-500 peer-checked:bg-red-900/50 bg-gray-800 rounded-xl p-4 text-center transition-all hover:bg-gray-750">
+                        <div class="text-3xl mb-1">🔴</div>
+                        <div class="text-sm text-gray-300">Low</div>
+                        <div class="text-xs text-gray-500">Light only</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Available Blocks - stepper -->
+        <div class="mb-6">
+            <label class="block text-sm text-gray-400 mb-3">Available 90-min blocks today</label>
+            <div class="flex items-center justify-center gap-4">
+                <button type="button" onclick="adjustBlocks(-1)" class="w-10 h-10 bg-gray-800 rounded-lg text-white text-xl hover:bg-gray-700">−</button>
+                <input type="number" name="available_blocks" id="blocks-input" value="4" min="0" max="8"
+                       class="w-16 bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-center text-xl focus:border-indigo-500 focus:outline-none">
+                <button type="button" onclick="adjustBlocks(1)" class="w-10 h-10 bg-gray-800 rounded-lg text-white text-xl hover:bg-gray-700">+</button>
+            </div>
+        </div>
+
+        <!-- Focus note - collapsed by default -->
+        <div class="mb-6">
+            <button type="button" onclick="this.nextElementSibling.classList.toggle('hidden');this.classList.add('hidden')"
+                    class="text-sm text-gray-400 hover:text-white">+ Add focus note (optional)</button>
+            <div class="hidden mt-2">
+                <textarea name="focus_note" rows="2" placeholder="e.g., meeting at 2pm, afternoon gone"
+                          class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-indigo-500 focus:outline-none"></textarea>
+            </div>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors">
+            Start My Day →
+        </button>
+    </form>
+</div>
+
+<script>
+function adjustBlocks(delta) {
+    const input = document.getElementById('blocks-input');
+    const newVal = Math.max(0, Math.min(8, parseInt(input.value) + delta));
+    input.value = newVal;
+}
+</script>

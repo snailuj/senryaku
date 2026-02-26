@@ -15,6 +15,8 @@ from senryaku.models import (
     Campaign,
     CampaignStatus,
     CognitiveLoad,
+    DailyCheckIn,
+    EnergyLevel,
     Mission,
     MissionStatus,
     Sortie,
@@ -79,6 +81,16 @@ def campaign_detail(request: Request, campaign_id: str, session: Session = Depen
         "campaign": campaign,
         "missions": missions,
         "health": health,
+    })
+
+
+@router.get("/checkin")
+def checkin_page(request: Request, session: Session = Depends(get_session)):
+    """Check-in page."""
+    return templates.TemplateResponse("checkin.html", {
+        "request": request,
+        "current_date": date.today().strftime("%A, %B %d"),
+        "today": date.today().isoformat(),
     })
 
 
@@ -346,4 +358,42 @@ def update_sortie_form(
 
     response = HTMLResponse(content="", status_code=200)
     response.headers["HX-Redirect"] = "/campaigns/" + str(mission.campaign_id)
+    return response
+
+
+@router.post("/forms/checkin")
+def submit_checkin(
+    request: Request,
+    date_str: str = Form(..., alias="date"),
+    energy_level: str = Form(...),
+    available_blocks: int = Form(...),
+    focus_note: str = Form(""),
+    session: Session = Depends(get_session),
+):
+    """Handle daily check-in form submission (upsert by date)."""
+    check_date = date.fromisoformat(date_str)
+
+    # Upsert
+    existing = session.exec(
+        select(DailyCheckIn).where(DailyCheckIn.date == check_date)
+    ).first()
+
+    if existing:
+        existing.energy_level = EnergyLevel(energy_level)
+        existing.available_blocks = available_blocks
+        existing.focus_note = focus_note if focus_note else None
+        session.add(existing)
+    else:
+        checkin = DailyCheckIn(
+            date=check_date,
+            energy_level=EnergyLevel(energy_level),
+            available_blocks=available_blocks,
+            focus_note=focus_note if focus_note else None,
+        )
+        session.add(checkin)
+
+    session.commit()
+
+    response = HTMLResponse(content="", status_code=200)
+    response.headers["HX-Redirect"] = "/briefing"
     return response

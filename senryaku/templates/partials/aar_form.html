@@ -1,0 +1,87 @@
+<div class="max-w-md mx-auto">
+    <h3 class="text-xl font-bold text-white mb-6 text-center">After-Action Report</h3>
+
+    <form hx-post="/forms/sorties/{{ sortie_id }}/complete" hx-target="#main-content" hx-swap="innerHTML">
+
+        <!-- Outcome - 4 large buttons -->
+        <div class="mb-6">
+            <label class="block text-sm text-gray-400 mb-3">Outcome</label>
+            <div class="grid grid-cols-2 gap-3">
+                <label class="cursor-pointer">
+                    <input type="radio" name="outcome" value="completed" class="sr-only peer" checked>
+                    <div class="peer-checked:ring-2 peer-checked:ring-green-500 peer-checked:bg-green-900/30 bg-gray-800 rounded-xl p-4 text-center transition-all hover:bg-gray-750">
+                        <div class="text-2xl mb-1">&#10003;</div>
+                        <div class="text-sm text-gray-300">Completed</div>
+                    </div>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="outcome" value="partial" class="sr-only peer">
+                    <div class="peer-checked:ring-2 peer-checked:ring-yellow-500 peer-checked:bg-yellow-900/30 bg-gray-800 rounded-xl p-4 text-center transition-all hover:bg-gray-750">
+                        <div class="text-2xl mb-1">&#9680;</div>
+                        <div class="text-sm text-gray-300">Partial</div>
+                    </div>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="outcome" value="blocked" class="sr-only peer">
+                    <div class="peer-checked:ring-2 peer-checked:ring-red-500 peer-checked:bg-red-900/30 bg-gray-800 rounded-xl p-4 text-center transition-all hover:bg-gray-750"
+                         onclick="document.getElementById('notes-section').classList.remove('hidden')">
+                        <div class="text-2xl mb-1">&#8856;</div>
+                        <div class="text-sm text-gray-300">Blocked</div>
+                    </div>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="outcome" value="pivoted" class="sr-only peer">
+                    <div class="peer-checked:ring-2 peer-checked:ring-blue-500 peer-checked:bg-blue-900/30 bg-gray-800 rounded-xl p-4 text-center transition-all hover:bg-gray-750">
+                        <div class="text-2xl mb-1">&#8635;</div>
+                        <div class="text-sm text-gray-300">Pivoted</div>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Energy After -->
+        <div class="mb-6">
+            <label class="block text-sm text-gray-400 mb-3">Energy after</label>
+            <div class="grid grid-cols-3 gap-3">
+                <label class="cursor-pointer">
+                    <input type="radio" name="energy_after" value="green" class="sr-only peer">
+                    <div class="peer-checked:ring-2 peer-checked:ring-green-500 bg-gray-800 rounded-lg p-2 text-center transition-all hover:bg-gray-750">
+                        <span class="text-lg text-green-500">Green</span>
+                    </div>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="energy_after" value="yellow" class="sr-only peer" checked>
+                    <div class="peer-checked:ring-2 peer-checked:ring-yellow-500 bg-gray-800 rounded-lg p-2 text-center transition-all hover:bg-gray-750">
+                        <span class="text-lg text-yellow-500">Yellow</span>
+                    </div>
+                </label>
+                <label class="cursor-pointer">
+                    <input type="radio" name="energy_after" value="red" class="sr-only peer">
+                    <div class="peer-checked:ring-2 peer-checked:ring-red-500 bg-gray-800 rounded-lg p-2 text-center transition-all hover:bg-gray-750">
+                        <span class="text-lg text-red-500">Red</span>
+                    </div>
+                </label>
+            </div>
+        </div>
+
+        <!-- Hidden fields -->
+        <input type="hidden" name="energy_before" value="{{ energy_before }}">
+        <input type="hidden" name="actual_blocks" value="1">
+
+        <!-- Notes (collapsed by default, expanded if blocked) -->
+        <div id="notes-section" class="mb-6 hidden">
+            <label class="block text-sm text-gray-400 mb-1">Notes</label>
+            <textarea name="notes" rows="2" placeholder="What happened? What's blocking?"
+                      class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white text-sm focus:border-indigo-500 focus:outline-none"></textarea>
+        </div>
+
+        <div class="mb-4">
+            <button type="button" onclick="document.getElementById('notes-section').classList.toggle('hidden')"
+                    class="text-sm text-gray-500 hover:text-gray-300">+ Add notes</button>
+        </div>
+
+        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors">
+            Submit Report
+        </button>
+    </form>
+</div>

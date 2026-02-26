@@ -1,6 +1,6 @@
 """Dashboard and form-handling routes for the Senryaku UI."""
 
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 from uuid import UUID
 
@@ -10,8 +10,11 @@ from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from sqlmodel import Session, select
 
+from senryaku.config import get_settings
 from senryaku.database import get_session
 from senryaku.models import (
+    AAR,
+    AAROutcome,
     Campaign,
     CampaignStatus,
     CognitiveLoad,
@@ -23,6 +26,8 @@ from senryaku.models import (
     SortieStatus,
 )
 from senryaku.services.health import compute_campaign_health, get_dashboard_data
+
+settings = get_settings()
 
 templates = Jinja2Templates(directory=str(Path(__file__).parent.parent / "templates"))
 
@@ -116,6 +121,34 @@ def checkin_page(request: Request, session: Session = Depends(get_session)):
     })
 
 
+@router.get("/sorties/{sortie_id}/focus")
+def sortie_focus(request: Request, sortie_id: str, session: Session = Depends(get_session)):
+    """Sortie focus view with 90-minute timer."""
+    sortie = session.get(Sortie, UUID(sortie_id))
+    if not sortie:
+        raise HTTPException(status_code=404, detail="Sortie not found")
+
+    # Start the sortie if queued
+    if sortie.status == SortieStatus.queued:
+        sortie.status = SortieStatus.active
+        sortie.started_at = datetime.utcnow()
+        session.add(sortie)
+        session.commit()
+        session.refresh(sortie)
+
+    mission = session.get(Mission, sortie.mission_id)
+    campaign = session.get(Campaign, mission.campaign_id)
+
+    return templates.TemplateResponse("sortie_focus.html", {
+        "request": request,
+        "current_date": date.today().strftime("%A, %B %d"),
+        "sortie": sortie,
+        "mission": mission,
+        "campaign": campaign,
+        "api_key": settings.api_key,
+    })
+
+
 # ---------------------------------------------------------------------------
 # Partial routes (return HTMX fragments for modals)
 # ---------------------------------------------------------------------------
@@ -203,6 +236,22 @@ def sortie_form_partial(
         "request": request,
         "sortie": sortie,
         "mission_id": mission_id,
+    })
+
+
+@router.get("/partials/aar-form")
+def aar_form(request: Request, sortie_id: str, session: Session = Depends(get_session)):
+    """Render the AAR form partial."""
+    # Pre-fill energy_before from today's check-in
+    checkin = session.exec(
+        select(DailyCheckIn).where(DailyCheckIn.date == date.today())
+    ).first()
+    energy_before = checkin.energy_level.value if checkin else "green"
+
+    return templates.TemplateResponse("partials/aar_form.html", {
+        "request": request,
+        "sortie_id": sortie_id,
+        "energy_before": energy_before,
     })
 
 
@@ -404,6 +453,47 @@ def update_sortie_form(
 
     response = HTMLResponse(content="", status_code=200)
     response.headers["HX-Redirect"] = "/campaigns/" + str(mission.campaign_id)
+    return response
+
+
+@router.post("/forms/sorties/{sortie_id}/complete")
+def complete_sortie_form(
+    request: Request,
+    sortie_id: str,
+    outcome: str = Form(...),
+    energy_before: str = Form("green"),
+    energy_after: str = Form("yellow"),
+    actual_blocks: int = Form(1),
+    notes: str = Form(""),
+    session: Session = Depends(get_session),
+):
+    """Handle AAR form submission."""
+    sortie = session.get(Sortie, UUID(sortie_id))
+    if not sortie:
+        raise HTTPException(status_code=404)
+
+    # Create AAR
+    aar = AAR(
+        sortie_id=sortie.id,
+        energy_before=EnergyLevel(energy_before),
+        energy_after=EnergyLevel(energy_after),
+        outcome=AAROutcome(outcome),
+        actual_blocks=actual_blocks,
+        notes=notes if notes else None,
+    )
+    session.add(aar)
+
+    # Update sortie status
+    sortie.completed_at = datetime.utcnow()
+    if outcome == "completed":
+        sortie.status = SortieStatus.completed
+    # For partial/blocked/pivoted, keep as active or mark appropriately
+
+    session.add(sortie)
+    session.commit()
+
+    response = HTMLResponse(content="", status_code=200)
+    response.headers["HX-Redirect"] = "/dashboard"
     return response
 
 

@@ -1,5 +1,9 @@
 <div class="flex items-center justify-between py-2 px-3 rounded-lg bg-gray-900/50 hover:bg-gray-900 transition-colors group">
     <div class="flex items-center gap-3 min-w-0">
+        <input type="checkbox" class="sortie-checkbox shrink-0 w-4 h-4 rounded border-gray-600 bg-gray-700 text-indigo-500 focus:ring-indigo-500 focus:ring-offset-0 cursor-pointer"
+               data-sortie-id="{{ sortie.id }}"
+               onclick="event.stopPropagation(); if(typeof updateBulkBar === 'function') updateBulkBar();"
+        >
         <span class="text-xs px-2 py-0.5 rounded-full font-medium shrink-0
             {% if sortie.cognitive_load.value == 'deep' %}badge-deep
             {% elif sortie.cognitive_load.value == 'medium' %}badge-medium

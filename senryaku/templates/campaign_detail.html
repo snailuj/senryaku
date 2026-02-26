@@ -30,6 +30,14 @@
         </div>
     </div>
 
+    <!-- Bulk actions bar (hidden until checkboxes are ticked) -->
+    <div id="bulk-actions" class="hidden bg-gray-800 border border-gray-700 rounded-lg p-3 mb-4 flex flex-wrap items-center gap-3">
+        <span class="text-sm text-gray-300"><span id="bulk-count">0</span> selected</span>
+        <button onclick="bulkAction('completed')" class="px-3 py-1.5 bg-green-700 hover:bg-green-600 text-white text-sm rounded">Complete</button>
+        <button onclick="bulkAction('abandoned')" class="px-3 py-1.5 bg-red-700 hover:bg-red-600 text-white text-sm rounded">Abandon</button>
+        <button onclick="clearBulkSelection()" class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded">Cancel</button>
+    </div>
+
     <!-- Missions -->
     <div class="flex items-center justify-between mb-4">
         <h3 class="text-lg font-semibold text-white">Missions</h3>
@@ -82,4 +90,46 @@
         {% endif %}
     </div>
 </div>
+
+<script>
+function updateBulkBar() {
+    var checked = document.querySelectorAll('.sortie-checkbox:checked');
+    var bar = document.getElementById('bulk-actions');
+    var count = document.getElementById('bulk-count');
+    if (checked.length > 0) {
+        bar.classList.remove('hidden');
+        count.textContent = checked.length;
+    } else {
+        bar.classList.add('hidden');
+    }
+}
+
+function bulkAction(status) {
+    var checked = document.querySelectorAll('.sortie-checkbox:checked');
+    var ids = [];
+    checked.forEach(function(cb) { ids.push(cb.dataset.sortieId); });
+    if (ids.length === 0) return;
+
+    var apiKey = document.querySelector('meta[name="api-key"]')?.content || '';
+    fetch('/api/v1/sorties/bulk', {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-API-Key': apiKey,
+        },
+        body: JSON.stringify({ ids: ids, status: status }),
+    }).then(function(response) {
+        if (response.ok) {
+            window.location.reload();
+        }
+    });
+}
+
+function clearBulkSelection() {
+    document.querySelectorAll('.sortie-checkbox').forEach(function(cb) {
+        cb.checked = false;
+    });
+    updateBulkBar();
+}
+</script>
 {% endblock %}

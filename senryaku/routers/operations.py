@@ -97,6 +97,27 @@ def route_sortie(
     return None
 
 
+@router.get("/drift")
+def get_drift_report(format: str | None = None, session: Session = Depends(get_session)):
+    """Return drift report as JSON or markdown."""
+    from senryaku.services.drift import compute_drift
+    report = compute_drift(session)
+    if format == "markdown":
+        lines = [f"# Drift Report \u2014 {report.date}", ""]
+        for s in report.misalignment_statements:
+            lines.append(f"- \u26a0\ufe0f {s}")
+        if not report.misalignment_statements:
+            lines.append("No significant misalignments detected.")
+        lines.append("")
+        lines.append("| Campaign | Expected | Actual | Drift | Trend |")
+        lines.append("|----------|----------|--------|-------|-------|")
+        for c in report.campaigns:
+            flag = "\u26a0\ufe0f" if c.is_misaligned else ""
+            lines.append(f"| {c.name} | {round(c.expected_share*100)}% | {round(c.actual_share*100)}% | {round(c.drift*100):+}% | {c.trend} {flag} |")
+        return PlainTextResponse("\n".join(lines))
+    return report
+
+
 @router.get("/review/weekly")
 def get_weekly_review(
     format: str | None = None,

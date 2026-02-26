@@ -231,6 +231,17 @@ class RerankRequest(BaseModel):
     ranks: List[RerankItem]
 
 
+class BulkStatusUpdate(BaseModel):
+    """Body for PUT /sorties/bulk — batch update sortie statuses."""
+    ids: List[UUID]
+    status: SortieStatus
+
+
+class MoveSortieRequest(BaseModel):
+    """Body for PUT /sorties/{id}/move — move sortie to a different mission."""
+    new_mission_id: UUID
+
+
 class BriefingResponse(BaseModel):
     date: date
     energy_level: EnergyLevel

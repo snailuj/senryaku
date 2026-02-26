@@ -10,6 +10,8 @@ from sqlmodel import Session, select
 from senryaku.database import get_session
 from senryaku.models import AAR, Campaign, Mission, Sortie, SortieStatus
 from senryaku.schemas import (
+    BulkStatusUpdate,
+    MoveSortieRequest,
     SortieCompleteRequest,
     SortieCreate,
     SortieRead,
@@ -73,6 +75,45 @@ def list_queued_sorties(
     )
     sorties = session.exec(statement).all()
     return sorties
+
+
+@router.put("/sorties/bulk")
+def bulk_update_sorties(
+    update: BulkStatusUpdate,
+    session: Session = Depends(get_session),
+):
+    """Batch complete/abandon sorties."""
+    updated = []
+    for sortie_id in update.ids:
+        sortie = session.get(Sortie, sortie_id)
+        if sortie:
+            sortie.status = update.status
+            if update.status == SortieStatus.completed:
+                sortie.completed_at = datetime.utcnow()
+            session.add(sortie)
+            updated.append(sortie)
+    session.commit()
+    return {"updated": len(updated)}
+
+
+@router.put("/sorties/{sortie_id}/move")
+def move_sortie(
+    sortie_id: UUID,
+    move: MoveSortieRequest,
+    session: Session = Depends(get_session),
+):
+    """Move sortie to a different mission."""
+    sortie = session.get(Sortie, sortie_id)
+    if not sortie:
+        raise HTTPException(status_code=404, detail="Sortie not found")
+    new_mission = session.get(Mission, move.new_mission_id)
+    if not new_mission:
+        raise HTTPException(status_code=404, detail="Target mission not found")
+    sortie.mission_id = move.new_mission_id
+    session.add(sortie)
+    session.commit()
+    session.refresh(sortie)
+    return sortie
 
 
 @router.put("/sorties/{sortie_id}", response_model=SortieRead)

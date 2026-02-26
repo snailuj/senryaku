@@ -14,7 +14,7 @@
         </button>
     </div>
 
-    <div id="campaign-list" class="grid gap-4 grid-cols-1 md:grid-cols-2">
+    <div id="campaign-list" class="grid gap-4 grid-cols-1 md:grid-cols-2" data-sortable="true">
         {% if campaigns %}
             {% for campaign in campaigns %}
                 {% include "partials/campaign_card.html" %}

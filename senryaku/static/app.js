@@ -105,3 +105,52 @@ function stopTimer() {
         timerInterval = null;
     }
 }
+
+// ---------------------------------------------------------------------------
+// Campaign reranking via drag-and-drop (SortableJS)
+// ---------------------------------------------------------------------------
+
+document.addEventListener('DOMContentLoaded', function() {
+    initSortable();
+});
+
+// Re-init after HTMX swaps
+document.addEventListener('htmx:afterSettle', function() {
+    initSortable();
+});
+
+function initSortable() {
+    const list = document.querySelector('[data-sortable="true"]');
+    if (!list || list.sortableInstance) return;
+
+    const apiKey = document.querySelector('meta[name="api-key"]')?.content || '';
+
+    list.sortableInstance = new Sortable(list, {
+        animation: 150,
+        ghostClass: 'opacity-50',
+        handle: '.campaign-accent',
+        onEnd: function() {
+            const cards = list.querySelectorAll('[data-campaign-id]');
+            const ranks = [];
+            cards.forEach(function(card, index) {
+                ranks.push({
+                    id: card.dataset.campaignId,
+                    rank: index + 1,
+                });
+            });
+
+            fetch('/api/v1/campaigns/rerank', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-API-Key': apiKey,
+                },
+                body: JSON.stringify({ ranks: ranks }),
+            }).then(function(response) {
+                if (response.ok) {
+                    htmx.ajax('GET', '/dashboard', {target: '#main-content', swap: 'innerHTML'});
+                }
+            });
+        }
+    });
+}

@@ -53,6 +53,7 @@ def dashboard(request: Request, session: Session = Depends(get_session)):
         "request": request,
         "current_date": date.today().strftime("%A, %B %d"),
         "campaigns": campaigns,
+        "api_key": settings.api_key,
     })
 
 
@@ -86,6 +87,7 @@ def campaign_detail(request: Request, campaign_id: str, session: Session = Depen
         "campaign": campaign,
         "missions": missions,
         "health": health,
+        "api_key": settings.api_key,
     })
 
 
@@ -108,6 +110,20 @@ def briefing_page(request: Request, session: Session = Depends(get_session)):
         "current_date": date.today().strftime("%A, %B %d"),
         "checkin": checkin,
         "sorties": sorties,
+        "api_key": settings.api_key,
+    })
+
+
+@router.get("/drift")
+def drift_page(request: Request, session: Session = Depends(get_session)):
+    """Drift report page."""
+    from senryaku.services.drift import compute_drift
+    report = compute_drift(session)
+    return templates.TemplateResponse("drift.html", {
+        "request": request,
+        "current_date": date.today().strftime("%A, %B %d"),
+        "report": report,
+        "api_key": settings.api_key,
     })
 
 
@@ -118,6 +134,7 @@ def checkin_page(request: Request, session: Session = Depends(get_session)):
         "request": request,
         "current_date": date.today().strftime("%A, %B %d"),
         "today": date.today().isoformat(),
+        "api_key": settings.api_key,
     })
 
 
@@ -130,6 +147,7 @@ def review_page(request: Request, session: Session = Depends(get_session)):
     return templates.TemplateResponse("review.html", {
         "request": request,
         "current_date": date.today().strftime("%A, %B %d"),
+        "api_key": settings.api_key,
         **data,
     })
 
@@ -508,6 +526,78 @@ def complete_sortie_form(
     response = HTMLResponse(content="", status_code=200)
     response.headers["HX-Redirect"] = "/dashboard"
     return response
+
+
+@router.post("/forms/campaigns/{campaign_id}/move-up")
+def move_campaign_up(
+    request: Request,
+    campaign_id: str,
+    session: Session = Depends(get_session),
+):
+    """Move a campaign up in priority (lower rank number = higher priority)."""
+    campaign = session.get(Campaign, UUID(campaign_id))
+    if not campaign:
+        raise HTTPException(status_code=404)
+
+    # Find the campaign immediately above (lower rank number)
+    above = session.exec(
+        select(Campaign)
+        .where(Campaign.status == CampaignStatus.active)
+        .where(Campaign.priority_rank < campaign.priority_rank)
+        .order_by(Campaign.priority_rank.desc())
+    ).first()
+
+    if above:
+        # Swap ranks
+        above.priority_rank, campaign.priority_rank = campaign.priority_rank, above.priority_rank
+        session.add(above)
+        session.add(campaign)
+        session.commit()
+
+    # Return refreshed dashboard content
+    campaigns = get_dashboard_data(session)
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "current_date": date.today().strftime("%A, %B %d"),
+        "campaigns": campaigns,
+        "api_key": settings.api_key,
+    })
+
+
+@router.post("/forms/campaigns/{campaign_id}/move-down")
+def move_campaign_down(
+    request: Request,
+    campaign_id: str,
+    session: Session = Depends(get_session),
+):
+    """Move a campaign down in priority (higher rank number = lower priority)."""
+    campaign = session.get(Campaign, UUID(campaign_id))
+    if not campaign:
+        raise HTTPException(status_code=404)
+
+    # Find the campaign immediately below (higher rank number)
+    below = session.exec(
+        select(Campaign)
+        .where(Campaign.status == CampaignStatus.active)
+        .where(Campaign.priority_rank > campaign.priority_rank)
+        .order_by(Campaign.priority_rank.asc())
+    ).first()
+
+    if below:
+        # Swap ranks
+        below.priority_rank, campaign.priority_rank = campaign.priority_rank, below.priority_rank
+        session.add(below)
+        session.add(campaign)
+        session.commit()
+
+    # Return refreshed dashboard content
+    campaigns = get_dashboard_data(session)
+    return templates.TemplateResponse("dashboard.html", {
+        "request": request,
+        "current_date": date.today().strftime("%A, %B %d"),
+        "campaigns": campaigns,
+        "api_key": settings.api_key,
+    })
 
 
 @router.post("/forms/checkin")

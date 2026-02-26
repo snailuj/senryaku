@@ -6,13 +6,44 @@ function toggleSidebar() {
     overlay.classList.toggle('hidden');
 }
 
+// Close sidebar on nav link click (mobile only)
+document.addEventListener('DOMContentLoaded', function() {
+    const sidebarLinks = document.querySelectorAll('.sidebar-link');
+    sidebarLinks.forEach(function(link) {
+        link.addEventListener('click', function() {
+            // Only toggle on mobile (when sidebar is in fixed position)
+            if (window.innerWidth < 1024) {
+                const sidebar = document.getElementById('sidebar');
+                if (!sidebar.classList.contains('-translate-x-full')) {
+                    toggleSidebar();
+                }
+            }
+        });
+    });
+});
+
 // Close modal — clears modal container by removing all child nodes
 function closeModal() {
     const container = document.getElementById('modal-container');
     while (container.firstChild) {
         container.removeChild(container.firstChild);
     }
+    document.body.classList.remove('modal-open');
 }
+
+// Watch for modal content being added (via HTMX) and lock body scroll
+const modalObserver = new MutationObserver(function(mutations) {
+    const container = document.getElementById('modal-container');
+    if (container && container.children.length > 0) {
+        document.body.classList.add('modal-open');
+    }
+});
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('modal-container');
+    if (container) {
+        modalObserver.observe(container, { childList: true });
+    }
+});
 
 // Close modal on Escape key
 document.addEventListener('keydown', (e) => {

@@ -4,7 +4,7 @@
             <h3 class="text-lg font-bold text-white">
                 {% if mission %}Edit Mission{% else %}New Mission{% endif %}
             </h3>
-            <button onclick="closeModal()" class="text-gray-400 hover:text-white">&times;</button>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-white text-xl min-h-[44px] min-w-[44px] flex items-center justify-center">&times;</button>
         </div>
 
         <form hx-post="{% if mission %}/forms/missions/{{ mission.id }}{% else %}/forms/missions{% endif %}"
@@ -36,9 +36,9 @@
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3 mt-6">
-                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-400 hover:text-white">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg">
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-400 hover:text-white min-h-[44px] rounded-lg">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg min-h-[44px]">
                     {% if mission %}Save{% else %}Create{% endif %}
                 </button>
             </div>

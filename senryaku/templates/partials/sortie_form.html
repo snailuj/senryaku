@@ -4,7 +4,7 @@
             <h3 class="text-lg font-bold text-white">
                 {% if sortie %}Edit Sortie{% else %}New Sortie{% endif %}
             </h3>
-            <button onclick="closeModal()" class="text-gray-400 hover:text-white">&times;</button>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-white text-xl min-h-[44px] min-w-[44px] flex items-center justify-center">&times;</button>
         </div>
 
         <form hx-post="{% if sortie %}/forms/sorties/{{ sortie.id }}{% else %}/forms/sorties{% endif %}"
@@ -53,7 +53,7 @@
                               class="w-full bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-white focus:border-indigo-500 focus:outline-none">{{ sortie.description if sortie and sortie.description else '' }}</textarea>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm text-gray-400 mb-1">Estimated Blocks</label>
                         <input type="number" name="estimated_blocks" value="{{ sortie.estimated_blocks if sortie else 1 }}" min="1" required
@@ -67,9 +67,9 @@
                 </div>
             </div>
 
-            <div class="flex justify-end gap-3 mt-6">
-                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-400 hover:text-white">Cancel</button>
-                <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg">
+            <div class="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 mt-6">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 text-gray-400 hover:text-white min-h-[44px] rounded-lg">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg min-h-[44px]">
                     {% if sortie %}Save{% else %}Create{% endif %}
                 </button>
             </div>

@@ -45,20 +45,20 @@
             <div class="grid grid-cols-3 gap-3">
                 <label class="cursor-pointer">
                     <input type="radio" name="energy_after" value="green" class="sr-only peer">
-                    <div class="peer-checked:ring-2 peer-checked:ring-green-500 bg-gray-800 rounded-lg p-2 text-center transition-all hover:bg-gray-750">
-                        <span class="text-lg text-green-500">Green</span>
+                    <div class="peer-checked:ring-2 peer-checked:ring-green-500 bg-gray-800 rounded-xl p-3 sm:p-4 text-center transition-all hover:bg-gray-750 min-h-[48px] flex items-center justify-center">
+                        <span class="text-lg text-green-500">🟢 Green</span>
                     </div>
                 </label>
                 <label class="cursor-pointer">
                     <input type="radio" name="energy_after" value="yellow" class="sr-only peer" checked>
-                    <div class="peer-checked:ring-2 peer-checked:ring-yellow-500 bg-gray-800 rounded-lg p-2 text-center transition-all hover:bg-gray-750">
-                        <span class="text-lg text-yellow-500">Yellow</span>
+                    <div class="peer-checked:ring-2 peer-checked:ring-yellow-500 bg-gray-800 rounded-xl p-3 sm:p-4 text-center transition-all hover:bg-gray-750 min-h-[48px] flex items-center justify-center">
+                        <span class="text-lg text-yellow-500">🟡 Yellow</span>
                     </div>
                 </label>
                 <label class="cursor-pointer">
                     <input type="radio" name="energy_after" value="red" class="sr-only peer">
-                    <div class="peer-checked:ring-2 peer-checked:ring-red-500 bg-gray-800 rounded-lg p-2 text-center transition-all hover:bg-gray-750">
-                        <span class="text-lg text-red-500">Red</span>
+                    <div class="peer-checked:ring-2 peer-checked:ring-red-500 bg-gray-800 rounded-xl p-3 sm:p-4 text-center transition-all hover:bg-gray-750 min-h-[48px] flex items-center justify-center">
+                        <span class="text-lg text-red-500">🔴 Red</span>
                     </div>
                 </label>
             </div>
@@ -77,10 +77,10 @@
 
         <div class="mb-4">
             <button type="button" onclick="document.getElementById('notes-section').classList.toggle('hidden')"
-                    class="text-sm text-gray-500 hover:text-gray-300">+ Add notes</button>
+                    class="text-sm text-gray-500 hover:text-gray-300 min-h-[44px] py-2">+ Add notes</button>
         </div>
 
-        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors">
+        <button type="submit" class="w-full py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors min-h-[48px]">
             Submit Report
         </button>
     </form>

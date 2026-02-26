@@ -10,14 +10,14 @@
     </div>
 
     <!-- Sortie title -->
-    <h1 class="text-3xl font-bold text-white mb-4">{{ sortie.title }}</h1>
+    <h1 class="text-2xl sm:text-3xl font-bold text-white mb-4 px-2">{{ sortie.title }}</h1>
 
     {% if sortie.description %}
-    <p class="text-gray-400 mb-6 max-w-lg mx-auto">{{ sortie.description }}</p>
+    <p class="text-gray-400 mb-6 max-w-lg mx-auto px-2">{{ sortie.description }}</p>
     {% endif %}
 
     <!-- Cognitive load badge -->
-    <div class="mb-8">
+    <div class="mb-6 sm:mb-8">
         <span class="inline-block text-sm px-3 py-1 rounded-full font-medium
             {% if sortie.cognitive_load.value == 'deep' %}badge-deep
             {% elif sortie.cognitive_load.value == 'medium' %}badge-medium
@@ -27,8 +27,8 @@
     </div>
 
     <!-- Timer -->
-    <div class="mb-8">
-        <div id="timer-display" class="text-7xl font-mono font-bold text-white mb-2 tabular-nums">90:00</div>
+    <div class="mb-6 sm:mb-8">
+        <div id="timer-display" class="text-5xl sm:text-7xl font-mono font-bold text-white mb-2 tabular-nums">90:00</div>
         <p class="text-sm text-gray-500">90-minute session</p>
     </div>
 
@@ -40,11 +40,11 @@
     </div>
 
     <!-- Actions -->
-    <div class="flex items-center justify-center gap-4">
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 px-4">
         <button hx-get="/partials/aar-form?sortie_id={{ sortie.id }}"
                 hx-target="#main-content"
                 hx-swap="innerHTML"
-                class="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors">
+                class="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-lg transition-colors min-h-[48px]">
             Complete
         </button>
         <button hx-put="/api/v1/sorties/{{ sortie.id }}"
@@ -53,7 +53,7 @@
                 hx-target="#main-content"
                 hx-swap="innerHTML"
                 onclick="if(!confirm('Abandon this sortie?'))event.preventDefault()"
-                class="px-4 py-3 text-gray-400 hover:text-red-400 text-sm transition-colors">
+                class="w-full sm:w-auto px-4 py-3 text-gray-400 hover:text-red-400 text-sm transition-colors min-h-[48px]">
             Abandon
         </button>
     </div>

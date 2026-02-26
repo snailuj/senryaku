@@ -2,7 +2,7 @@
     <div class="modal-content max-w-lg">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-lg font-bold text-white">What should I do?</h3>
-            <button onclick="closeModal()" class="text-gray-400 hover:text-white text-xl">&times;</button>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-white text-xl min-h-[44px] min-w-[44px] flex items-center justify-center">&times;</button>
         </div>
 
         {% if not show_result %}
@@ -10,17 +10,17 @@
         <p class="text-gray-400 text-sm mb-4">How's your energy right now?</p>
         <div class="grid grid-cols-3 gap-3 mb-4">
             <button hx-get="/partials/route-result?energy=green" hx-target="#modal-container"
-                    class="bg-gray-800 hover:bg-green-900/50 rounded-xl p-4 text-center transition-all">
+                    class="bg-gray-800 hover:bg-green-900/50 rounded-xl p-4 text-center transition-all min-h-[72px]">
                 <div class="text-2xl mb-1">🟢</div>
                 <div class="text-sm text-gray-300">Good</div>
             </button>
             <button hx-get="/partials/route-result?energy=yellow" hx-target="#modal-container"
-                    class="bg-gray-800 hover:bg-yellow-900/50 rounded-xl p-4 text-center transition-all">
+                    class="bg-gray-800 hover:bg-yellow-900/50 rounded-xl p-4 text-center transition-all min-h-[72px]">
                 <div class="text-2xl mb-1">🟡</div>
                 <div class="text-sm text-gray-300">Medium</div>
             </button>
             <button hx-get="/partials/route-result?energy=red" hx-target="#modal-container"
-                    class="bg-gray-800 hover:bg-red-900/50 rounded-xl p-4 text-center transition-all">
+                    class="bg-gray-800 hover:bg-red-900/50 rounded-xl p-4 text-center transition-all min-h-[72px]">
                 <div class="text-2xl mb-1">🔴</div>
                 <div class="text-sm text-gray-300">Low</div>
             </button>
@@ -40,7 +40,7 @@
             </div>
             <h4 class="text-lg font-semibold text-white mb-3">{{ sortie.title }}</h4>
             <a href="/sorties/{{ sortie.id }}/focus" onclick="closeModal()"
-               class="inline-block px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium">
+               class="inline-block px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg font-medium min-h-[48px]">
                 Start This Sortie →
             </a>
         </div>

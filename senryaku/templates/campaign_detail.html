@@ -10,18 +10,18 @@
     </div>
 
     <!-- Campaign header -->
-    <div class="campaign-accent bg-gray-800 rounded-lg p-6 mb-6" style="--campaign-colour: {{ campaign.colour }}">
+    <div class="campaign-accent bg-gray-800 rounded-lg p-4 sm:p-6 mb-6" style="--campaign-colour: {{ campaign.colour }}">
         <div class="flex items-center justify-between mb-2">
-            <h2 class="text-2xl font-bold text-white">{{ campaign.name }}</h2>
+            <h2 class="text-xl sm:text-2xl font-bold text-white">{{ campaign.name }}</h2>
             <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full health-{{ health }}"></span>
                 <button hx-get="/partials/campaign-form?id={{ campaign.id }}"
                         hx-target="#modal-container"
-                        class="text-gray-400 hover:text-white text-sm">Edit</button>
+                        class="text-gray-400 hover:text-white text-sm min-h-[44px] min-w-[44px] flex items-center justify-center">Edit</button>
             </div>
         </div>
         <p class="text-gray-400 text-sm">{{ campaign.description }}</p>
-        <div class="flex gap-6 mt-4 text-sm text-gray-400">
+        <div class="flex flex-wrap gap-x-6 gap-y-1 mt-4 text-sm text-gray-400">
             <span>Priority: #{{ campaign.priority_rank }}</span>
             <span>Target: {{ campaign.weekly_block_target }} blocks/week</span>
             {% if campaign.target_date %}
@@ -35,7 +35,7 @@
         <h3 class="text-lg font-semibold text-white">Missions</h3>
         <button hx-get="/partials/mission-form?campaign_id={{ campaign.id }}"
                 hx-target="#modal-container"
-                class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg">
+                class="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white text-sm rounded-lg min-h-[44px]">
             + Mission
         </button>
     </div>
@@ -43,24 +43,24 @@
     <div id="missions-list" class="space-y-4">
         {% for mission in missions %}
         <div class="bg-gray-800 rounded-lg p-4">
-            <div class="flex items-center justify-between mb-3">
-                <div class="flex items-center gap-2">
-                    <span class="text-sm px-2 py-0.5 rounded-full
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
+                <div class="flex items-center gap-2 min-w-0">
+                    <span class="text-sm px-2 py-0.5 rounded-full shrink-0
                         {% if mission.status.value == 'completed' %}bg-green-900 text-green-300
                         {% elif mission.status.value == 'in_progress' %}bg-blue-900 text-blue-300
                         {% elif mission.status.value == 'blocked' %}bg-red-900 text-red-300
                         {% else %}bg-gray-700 text-gray-300{% endif %}">
                         {{ mission.status.value | replace('_', ' ') | title }}
                     </span>
-                    <h4 class="font-medium text-white">{{ mission.name }}</h4>
+                    <h4 class="font-medium text-white truncate">{{ mission.name }}</h4>
                 </div>
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-2 shrink-0">
                     <button hx-get="/partials/sortie-form?mission_id={{ mission.id }}"
                             hx-target="#modal-container"
-                            class="text-gray-400 hover:text-white text-sm">+ Sortie</button>
+                            class="text-gray-400 hover:text-white text-sm px-2 py-1 min-h-[44px] flex items-center">+ Sortie</button>
                     <button hx-get="/partials/mission-form?id={{ mission.id }}&campaign_id={{ campaign.id }}"
                             hx-target="#modal-container"
-                            class="text-gray-400 hover:text-white text-sm">Edit</button>
+                            class="text-gray-400 hover:text-white text-sm px-2 py-1 min-h-[44px] flex items-center">Edit</button>
                 </div>
             </div>
 

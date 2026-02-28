@@ -1,4 +1,42 @@
+// ---------------------------------------------------------------------------
+// Dark/Light theme toggle
+// ---------------------------------------------------------------------------
+
+function toggleTheme() {
+    const html = document.documentElement;
+    const isDark = html.classList.contains('dark');
+    if (isDark) {
+        html.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
+    } else {
+        html.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
+    }
+    updateThemeIcon();
+}
+
+function updateThemeIcon() {
+    const icon = document.getElementById('theme-icon');
+    const label = document.getElementById('theme-label');
+    if (!icon) return;
+    const isDark = document.documentElement.classList.contains('dark');
+    icon.textContent = isDark ? '\u{1F319}' : '\u2600\uFE0F';
+    if (label) label.textContent = isDark ? 'Dark' : 'Light';
+}
+
+// Apply saved theme on load (runs immediately, before DOMContentLoaded)
+(function() {
+    const saved = localStorage.getItem('theme');
+    if (saved === 'light') {
+        document.documentElement.classList.remove('dark');
+    }
+    // Update icon after DOM ready
+    document.addEventListener('DOMContentLoaded', updateThemeIcon);
+})();
+
+// ---------------------------------------------------------------------------
 // Sidebar toggle
+// ---------------------------------------------------------------------------
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.getElementById('sidebar-overlay');

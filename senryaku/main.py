@@ -18,7 +18,10 @@ async def lifespan(app: FastAPI):
     # Create data directory if needed
     Path(settings.db_path).parent.mkdir(parents=True, exist_ok=True)
     init_db()
+    from senryaku.services.scheduler import init_scheduler, shutdown_scheduler
+    init_scheduler()
     yield
+    shutdown_scheduler()
 
 
 app = FastAPI(

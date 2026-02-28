@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <h2 class="text-2xl font-bold text-white dark:text-white">Settings</h2>
+    <p class="text-gray-400 dark:text-gray-400 text-sm">
+        Configuration is read from environment variables (prefix: <code class="bg-gray-800 dark:bg-gray-800 px-1 rounded">SENRYAKU_</code>).
+        Edit your <code class="bg-gray-800 dark:bg-gray-800 px-1 rounded">.env</code> file and restart to change values.
+    </p>
+
+    <!-- General -->
+    <div class="bg-gray-900 dark:bg-gray-900 rounded-xl p-6 space-y-4 border border-gray-800 dark:border-gray-800">
+        <h3 class="text-lg font-semibold text-white dark:text-white">General</h3>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-400 dark:text-gray-400 mb-1">Timezone</label>
+            <div class="bg-gray-800 dark:bg-gray-800 rounded-lg px-4 py-2 text-gray-200 dark:text-gray-200 text-sm">
+                {{ settings.timezone }}
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-400 dark:text-gray-400 mb-1">Base URL</label>
+            <div class="bg-gray-800 dark:bg-gray-800 rounded-lg px-4 py-2 text-gray-200 dark:text-gray-200 text-sm">
+                {{ settings.base_url }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Webhook -->
+    <div class="bg-gray-900 dark:bg-gray-900 rounded-xl p-6 space-y-4 border border-gray-800 dark:border-gray-800">
+        <h3 class="text-lg font-semibold text-white dark:text-white">Webhook Notifications</h3>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-400 dark:text-gray-400 mb-1">Webhook URL</label>
+            <div class="bg-gray-800 dark:bg-gray-800 rounded-lg px-4 py-2 text-gray-200 dark:text-gray-200 text-sm">
+                {% if settings.webhook_url %}
+                    {{ settings.webhook_url }}
+                {% else %}
+                    <span class="text-gray-500">Not configured</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-400 dark:text-gray-400 mb-1">Webhook Type</label>
+            <div class="bg-gray-800 dark:bg-gray-800 rounded-lg px-4 py-2 text-gray-200 dark:text-gray-200 text-sm">
+                {{ settings.webhook_type }}
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Options: ntfy, telegram, generic</p>
+        </div>
+    </div>
+
+    <!-- Scheduling -->
+    <div class="bg-gray-900 dark:bg-gray-900 rounded-xl p-6 space-y-4 border border-gray-800 dark:border-gray-800">
+        <h3 class="text-lg font-semibold text-white dark:text-white">Cron Schedules</h3>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-400 dark:text-gray-400 mb-1">Morning Briefing Cron</label>
+            <div class="bg-gray-800 dark:bg-gray-800 rounded-lg px-4 py-2 text-gray-200 dark:text-gray-200 text-sm font-mono">
+                {{ settings.briefing_cron }}
+            </div>
+            <p class="text-xs text-gray-500 mt-1">Format: minute hour day month day-of-week</p>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-gray-400 dark:text-gray-400 mb-1">Weekly Review Cron</label>
+            <div class="bg-gray-800 dark:bg-gray-800 rounded-lg px-4 py-2 text-gray-200 dark:text-gray-200 text-sm font-mono">
+                {{ settings.review_cron }}
+            </div>
+        </div>
+    </div>
+
+    <!-- Environment Variable Reference -->
+    <div class="bg-gray-900 dark:bg-gray-900 rounded-xl p-6 space-y-4 border border-gray-800 dark:border-gray-800">
+        <h3 class="text-lg font-semibold text-white dark:text-white">Environment Variables</h3>
+        <p class="text-sm text-gray-400 dark:text-gray-400">Set these in your <code class="bg-gray-800 dark:bg-gray-800 px-1 rounded">.env</code> file:</p>
+        <div class="bg-gray-800 dark:bg-gray-800 rounded-lg p-4 text-sm font-mono text-gray-300 dark:text-gray-300 space-y-1">
+            <div>SENRYAKU_API_KEY=your-secret-key</div>
+            <div>SENRYAKU_TIMEZONE=Pacific/Auckland</div>
+            <div>SENRYAKU_WEBHOOK_URL=https://ntfy.sh/your-topic</div>
+            <div>SENRYAKU_WEBHOOK_TYPE=ntfy</div>
+            <div>SENRYAKU_BRIEFING_CRON=0 7 * * *</div>
+            <div>SENRYAKU_REVIEW_CRON=0 18 * * 0</div>
+            <div>SENRYAKU_BASE_URL=https://senryaku.example.com</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

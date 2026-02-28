@@ -129,3 +129,25 @@ def get_weekly_review(
     if format == "markdown":
         return PlainTextResponse(generate_weekly_review_markdown(session))
     return generate_weekly_review(session)
+
+
+@router.get("/dashboard/health")
+def get_dashboard_health(session: Session = Depends(get_session)):
+    """Campaign health summary as JSON -- also serves Obsidian integration."""
+    from senryaku.services.health import get_dashboard_data
+    return get_dashboard_data(session)
+
+
+@router.get("/settings")
+def get_settings_api():
+    """Return current settings as JSON (read-only)."""
+    from senryaku.config import get_settings
+    settings = get_settings()
+    return {
+        "timezone": settings.timezone,
+        "webhook_url": settings.webhook_url,
+        "webhook_type": settings.webhook_type,
+        "briefing_cron": settings.briefing_cron,
+        "review_cron": settings.review_cron,
+        "base_url": settings.base_url,
+    }

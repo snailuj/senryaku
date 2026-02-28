@@ -152,6 +152,17 @@ def review_page(request: Request, session: Session = Depends(get_session)):
     })
 
 
+@router.get("/settings")
+def settings_page(request: Request, session: Session = Depends(get_session)):
+    """Settings page — displays current configuration (read-only)."""
+    return templates.TemplateResponse("settings.html", {
+        "request": request,
+        "current_date": date.today().strftime("%A, %B %d"),
+        "settings": settings,
+        "api_key": settings.api_key,
+    })
+
+
 @router.get("/sorties/{sortie_id}/focus")
 def sortie_focus(request: Request, sortie_id: str, session: Session = Depends(get_session)):
     """Sortie focus view with 90-minute timer."""

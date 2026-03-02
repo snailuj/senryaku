@@ -55,6 +55,15 @@ class APIKeyMiddleware(BaseHTTPMiddleware):
 
 app.add_middleware(APIKeyMiddleware)
 
+# Passkey auth for HTML views (requires DOJO_SESSION_SECRET)
+try:
+    from dojo_auth import DojoAuthMiddleware
+    from dojo_auth.config import get_settings as _dojo_settings
+    if _dojo_settings().session_secret:
+        app.add_middleware(DojoAuthMiddleware)
+except ImportError:
+    pass
+
 # Import and include routers
 from senryaku.routers.campaigns import router as campaigns_router  # noqa: E402
 from senryaku.routers.missions import router as missions_router  # noqa: E402

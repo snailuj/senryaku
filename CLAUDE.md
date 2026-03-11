@@ -33,3 +33,4 @@ pytest -v
 - API key auth via `X-API-Key` header for API endpoints
 - HTMX for all interactive UI (no SPA framework)
 - Dark mode default, Tailwind CSS via CDN
+- Comments explain intent, constraints, or gotchas — never restate what the code already says
